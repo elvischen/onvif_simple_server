@@ -17,6 +17,8 @@
 #ifndef DEVICE_SERVICE_H
 #define DEVICE_SERVICE_H
 
+#include "onvif_simple_server.h"
+
 int device_get_services();
 int device_get_service_capabilities();
 int device_get_device_information();
@@ -25,6 +27,8 @@ int device_system_reboot();
 int device_get_scopes();
 int device_get_users();
 int device_get_wsdl_url();
+typedef int (*device_get_capabilities_hook_t)(int category, service_context_t *ctx);
+void register_device_get_capabilities_hook(device_get_capabilities_hook_t hook);
 int device_get_capabilities();
 int device_get_network_interfaces();
 int device_get_discovery_mode();
