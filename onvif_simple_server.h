@@ -94,6 +94,22 @@ typedef struct {
     char *jump_to_abs;
     char *jump_to_rel;
     char *get_presets;
+
+    /* Optional hooks loaded from shared libraries */
+    int (*on_move_left)(double);
+    int (*on_move_right)(double);
+    int (*on_move_up)(double);
+    int (*on_move_down)(double);
+    int (*on_move_in)(double);
+    int (*on_move_out)(double);
+    int (*on_move_stop)(const char *);
+    int (*on_move_preset)(int);
+    int (*on_goto_home_position)(void);
+    int (*on_set_preset)(int, const char *);
+    int (*on_set_home_position)(void);
+    int (*on_remove_preset)(int);
+    int (*on_jump_to_abs)(double, double, double);
+    int (*on_jump_to_rel)(double, double, double);
 } ptz_node_t;
 
 typedef struct {
