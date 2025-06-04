@@ -409,13 +409,18 @@ int ptz_goto_preset()
         send_fault("ptz_service", "Sender", "ter:InvalidArgVal", "ter:NoToken", "No token", "The requested preset token does not exist");
         return -4;
     }
-    if (service_ctx.ptz_node.move_preset == NULL) {
+    if ((service_ctx.ptz_node.move_preset == NULL) &&
+            (service_ctx.ptz_node.on_move_preset == NULL)) {
         send_action_failed_fault("ptz_service", -5);
         return -5;
     }
 
-    sprintf(sys_command, service_ctx.ptz_node.move_preset, preset_number);
-    system(sys_command);
+    if (service_ctx.ptz_node.on_move_preset != NULL) {
+        service_ctx.ptz_node.on_move_preset(preset_number);
+    } else {
+        sprintf(sys_command, service_ctx.ptz_node.move_preset, preset_number);
+        system(sys_command);
+    }
     long size = cat(NULL, "ptz_service_files/GotoPreset.xml", 0);
 
     fprintf(stdout, "Content-type: application/soap+xml\r\n");
@@ -439,11 +444,16 @@ int ptz_goto_home_position()
         return -2;
     }
 
-    if (service_ctx.ptz_node.goto_home_position == NULL) {
+    if ((service_ctx.ptz_node.goto_home_position == NULL) &&
+            (service_ctx.ptz_node.on_goto_home_position == NULL)) {
         send_action_failed_fault("ptz_service", -3);
         return -3;
     }
-    system(service_ctx.ptz_node.goto_home_position);
+    if (service_ctx.ptz_node.on_goto_home_position != NULL) {
+        service_ctx.ptz_node.on_goto_home_position();
+    } else {
+        system(service_ctx.ptz_node.goto_home_position);
+    }
 
     long size = cat(NULL, "ptz_service_files/GotoHomePosition.xml", 0);
 
@@ -491,21 +501,29 @@ int ptz_continuous_move()
         dx = atof(x);
 
         if (dx > 0.0) {
-            if (service_ctx.ptz_node.move_right == NULL) {
+            if (service_ctx.ptz_node.on_move_right != NULL) {
+                service_ctx.ptz_node.on_move_right(dx);
+                ret = 0;
+            } else if (service_ctx.ptz_node.move_right != NULL) {
+                sprintf(sys_command, service_ctx.ptz_node.move_right, dx);
+                system(sys_command);
+                ret = 0;
+            } else {
                 send_action_failed_fault("ptz_service", -3);
                 return -3;
             }
-            sprintf(sys_command, service_ctx.ptz_node.move_right, dx);
-            system(sys_command);
-            ret = 0;
         } else if (dx < 0.0) {
-            if (service_ctx.ptz_node.move_left == NULL) {
+            if (service_ctx.ptz_node.on_move_left != NULL) {
+                service_ctx.ptz_node.on_move_left(-dx);
+                ret = 0;
+            } else if (service_ctx.ptz_node.move_left != NULL) {
+                sprintf(sys_command, service_ctx.ptz_node.move_left, -dx);
+                system(sys_command);
+                ret = 0;
+            } else {
                 send_action_failed_fault("ptz_service", -4);
                 return -4;
             }
-            sprintf(sys_command, service_ctx.ptz_node.move_left, -dx);
-            system(sys_command);
-            ret = 0;
         }
     }
 
@@ -513,21 +531,29 @@ int ptz_continuous_move()
         dy = atof(y);
 
         if (dy > 0.0) {
-            if (service_ctx.ptz_node.move_up == NULL) {
+            if (service_ctx.ptz_node.on_move_up != NULL) {
+                service_ctx.ptz_node.on_move_up(dy);
+                ret = 0;
+            } else if (service_ctx.ptz_node.move_up != NULL) {
+                sprintf(sys_command, service_ctx.ptz_node.move_up, dy);
+                system(sys_command);
+                ret = 0;
+            } else {
                 send_action_failed_fault("ptz_service", -5);
                 return -5;
             }
-            sprintf(sys_command, service_ctx.ptz_node.move_up, dy);
-            system(sys_command);
-            ret = 0;
         } else if (dy < 0.0) {
-            if (service_ctx.ptz_node.move_down == NULL) {
+            if (service_ctx.ptz_node.on_move_down != NULL) {
+                service_ctx.ptz_node.on_move_down(-dy);
+                ret = 0;
+            } else if (service_ctx.ptz_node.move_down != NULL) {
+                sprintf(sys_command, service_ctx.ptz_node.move_down, -dy);
+                system(sys_command);
+                ret = 0;
+            } else {
                 send_action_failed_fault("ptz_service", -6);
                 return -6;
             }
-            sprintf(sys_command, service_ctx.ptz_node.move_down, -dy);
-            system(sys_command);
-            ret = 0;
         }
     }
 
@@ -535,21 +561,29 @@ int ptz_continuous_move()
         dz = atof(z);
 
         if (dz > 0.0) {
-            if (service_ctx.ptz_node.move_in == NULL) {
+            if (service_ctx.ptz_node.on_move_in != NULL) {
+                service_ctx.ptz_node.on_move_in(dz);
+                ret = 0;
+            } else if (service_ctx.ptz_node.move_in != NULL) {
+                sprintf(sys_command, service_ctx.ptz_node.move_in, dz);
+                system(sys_command);
+                ret = 0;
+            } else {
                 send_action_failed_fault("ptz_service", -7);
                 return -7;
             }
-            sprintf(sys_command, service_ctx.ptz_node.move_in, dz);
-            system(sys_command);
-            ret = 0;
         } else if (dz < 0.0) {
-            if (service_ctx.ptz_node.move_out == NULL) {
+            if (service_ctx.ptz_node.on_move_out != NULL) {
+                service_ctx.ptz_node.on_move_out(-dz);
+                ret = 0;
+            } else if (service_ctx.ptz_node.move_out != NULL) {
+                sprintf(sys_command, service_ctx.ptz_node.move_out, -dz);
+                system(sys_command);
+                ret = 0;
+            } else {
                 send_action_failed_fault("ptz_service", -8);
                 return -8;
             }
-            sprintf(sys_command, service_ctx.ptz_node.move_out, -dz);
-            system(sys_command);
-            ret = 0;
         }
     }
 
@@ -685,7 +719,11 @@ int ptz_relative_move()
     }
 
     if (ret == 0) {
-        system(sys_command);
+        if (service_ctx.ptz_node.on_jump_to_rel != NULL) {
+            service_ctx.ptz_node.on_jump_to_rel(dx, dy, dz);
+        } else {
+            system(sys_command);
+        }
 
         long size = cat(NULL, "ptz_service_files/RelativeMove.xml", 0);
 
@@ -774,7 +812,11 @@ int ptz_absolute_move()
     }
 
     if (ret == 0) {
-        system(sys_command);
+        if (service_ctx.ptz_node.on_jump_to_abs != NULL) {
+            service_ctx.ptz_node.on_jump_to_abs(dx, dy, dz);
+        } else {
+            system(sys_command);
+        }
 
         long size = cat(NULL, "ptz_service_files/AbsoluteMove.xml", 0);
 
@@ -807,7 +849,8 @@ int ptz_stop()
         return -2;
     }
 
-    if (service_ctx.ptz_node.move_stop == NULL) {
+    if ((service_ctx.ptz_node.move_stop == NULL) &&
+            (service_ctx.ptz_node.on_move_stop == NULL)) {
         send_action_failed_fault("ptz_service", -3);
         return -3;
     }
@@ -822,14 +865,26 @@ int ptz_stop()
     }
 
     if (pantilt && zoom) {
-        sprintf(sys_command, service_ctx.ptz_node.move_stop, "all");
-        system(sys_command);
+        if (service_ctx.ptz_node.on_move_stop != NULL) {
+            service_ctx.ptz_node.on_move_stop("all");
+        } else {
+            sprintf(sys_command, service_ctx.ptz_node.move_stop, "all");
+            system(sys_command);
+        }
     } else if (pantilt) {
-        sprintf(sys_command, service_ctx.ptz_node.move_stop, "pantilt");
-        system(sys_command);
+        if (service_ctx.ptz_node.on_move_stop != NULL) {
+            service_ctx.ptz_node.on_move_stop("pantilt");
+        } else {
+            sprintf(sys_command, service_ctx.ptz_node.move_stop, "pantilt");
+            system(sys_command);
+        }
     } else if (zoom) {
-        sprintf(sys_command, service_ctx.ptz_node.move_stop, "zoom");
-        system(sys_command);
+        if (service_ctx.ptz_node.on_move_stop != NULL) {
+            service_ctx.ptz_node.on_move_stop("zoom");
+        } else {
+            sprintf(sys_command, service_ctx.ptz_node.move_stop, "zoom");
+            system(sys_command);
+        }
     }
 
     long size = cat(NULL, "ptz_service_files/Stop.xml", 0);
@@ -1041,7 +1096,8 @@ int ptz_set_preset()
         }
     }
 
-    if (service_ctx.ptz_node.set_preset == NULL) {
+    if ((service_ctx.ptz_node.set_preset == NULL) &&
+            (service_ctx.ptz_node.on_set_preset == NULL)) {
         destroy_presets();
         send_action_failed_fault("ptz_service", -9);
         return -9;
@@ -1050,8 +1106,12 @@ int ptz_set_preset()
     destroy_presets();
 
     // Unhandled race condition
-    sprintf(sys_command, service_ctx.ptz_node.set_preset, preset_number, (char *) preset_name_out);
-    system(sys_command);
+    if (service_ctx.ptz_node.on_set_preset != NULL) {
+        service_ctx.ptz_node.on_set_preset(preset_number, preset_name_out);
+    } else {
+        sprintf(sys_command, service_ctx.ptz_node.set_preset, preset_number, (char *) preset_name_out);
+        system(sys_command);
+    }
     sleep(1);
 
     init_presets();
@@ -1095,13 +1155,17 @@ int ptz_set_home_position()
         return -2;
     }
 
-    if (service_ctx.ptz_node.set_home_position == NULL) {
+    if ((service_ctx.ptz_node.set_home_position == NULL) &&
+            (service_ctx.ptz_node.on_set_home_position == NULL)) {
         send_action_failed_fault("ptz_service", -3);
         return -3;
     }
-
-    strcpy(sys_command, service_ctx.ptz_node.set_home_position);
-    system(sys_command);
+    if (service_ctx.ptz_node.on_set_home_position != NULL) {
+        service_ctx.ptz_node.on_set_home_position();
+    } else {
+        strcpy(sys_command, service_ctx.ptz_node.set_home_position);
+        system(sys_command);
+    }
 
     long size = cat(NULL, "ptz_service_files/SetHomePosition.xml", 0);
 
@@ -1134,13 +1198,17 @@ int ptz_remove_preset()
         return -3;
     }
 
-    if (service_ctx.ptz_node.remove_preset == NULL) {
+    if ((service_ctx.ptz_node.remove_preset == NULL) &&
+            (service_ctx.ptz_node.on_remove_preset == NULL)) {
         send_action_failed_fault("ptz_service", -4);
         return -4;
     }
-
-    sprintf(sys_command, service_ctx.ptz_node.remove_preset, preset_number);
-    system(sys_command);
+    if (service_ctx.ptz_node.on_remove_preset != NULL) {
+        service_ctx.ptz_node.on_remove_preset(preset_number);
+    } else {
+        sprintf(sys_command, service_ctx.ptz_node.remove_preset, preset_number);
+        system(sys_command);
+    }
 
     long size = cat(NULL, "ptz_service_files/RemovePreset.xml", 0);
 

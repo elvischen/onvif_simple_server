@@ -151,6 +151,22 @@ jump_to_abs=/tmp/sd/yi-hack/bin/ipc_cmd -j %f,%f,%f
 jump_to_rel=/tmp/sd/yi-hack/bin/ipc_cmd -J %f,%f,%f
 get_presets=/tmp/sd/yi-hack/script/ptz_presets.sh -a get_presets
 
+You can also implement custom PTZ logic in a shared library. Prefix the command
+with `dl:` and specify the library path and symbol name separated by a colon.
+For example:
+
+```
+move_left=dl:/usr/local/lib/myptz.so:on_move_left
+```
+
+The library must export functions matching the expected signatures, e.g.:
+
+```c
+int on_move_left(double speed) { /* your code */ }
+```
+
+#RELAY OUTPUTS
+
 #RELAY OUTPUTS
 #Relay 0
 idle_state=open

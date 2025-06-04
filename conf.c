@@ -22,6 +22,7 @@
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
+#include <dlfcn.h>
 
 #include "cjson/cJSON.h"
 #include "conf.h"
@@ -30,6 +31,30 @@
 #include "onvif_simple_server.h"
 
 extern service_context_t service_ctx;
+
+static void *load_ptz_hook(const char *spec)
+{
+    if (spec == NULL)
+        return NULL;
+
+    if (strncmp(spec, "dl:", 3) != 0)
+        return NULL;
+
+    const char *p = spec + 3;
+    const char *sep = strrchr(p, ':');
+    if (sep == NULL)
+        return NULL;
+
+    char lib[PATH_MAX];
+    strncpy(lib, p, sep - p);
+    lib[sep - p] = '\0';
+
+    void *handle = dlopen(lib, RTLD_NOW);
+    if (handle == NULL)
+        return NULL;
+
+    return dlsym(handle, sep + 1);
+}
 
 int process_conf_file(char *file)
 {
@@ -92,6 +117,34 @@ int process_conf_file(char *file)
     service_ctx.ptz_node.remove_preset = NULL;
     service_ctx.ptz_node.jump_to_abs = NULL;
     service_ctx.ptz_node.jump_to_rel = NULL;
+    service_ctx.ptz_node.on_move_left = NULL;
+    service_ctx.ptz_node.on_move_right = NULL;
+    service_ctx.ptz_node.on_move_up = NULL;
+    service_ctx.ptz_node.on_move_down = NULL;
+    service_ctx.ptz_node.on_move_in = NULL;
+    service_ctx.ptz_node.on_move_out = NULL;
+    service_ctx.ptz_node.on_move_stop = NULL;
+    service_ctx.ptz_node.on_move_preset = NULL;
+    service_ctx.ptz_node.on_goto_home_position = NULL;
+    service_ctx.ptz_node.on_set_preset = NULL;
+    service_ctx.ptz_node.on_set_home_position = NULL;
+    service_ctx.ptz_node.on_remove_preset = NULL;
+    service_ctx.ptz_node.on_jump_to_abs = NULL;
+    service_ctx.ptz_node.on_jump_to_rel = NULL;
+    service_ctx.ptz_node.on_move_left = NULL;
+    service_ctx.ptz_node.on_move_right = NULL;
+    service_ctx.ptz_node.on_move_up = NULL;
+    service_ctx.ptz_node.on_move_down = NULL;
+    service_ctx.ptz_node.on_move_in = NULL;
+    service_ctx.ptz_node.on_move_out = NULL;
+    service_ctx.ptz_node.on_move_stop = NULL;
+    service_ctx.ptz_node.on_move_preset = NULL;
+    service_ctx.ptz_node.on_goto_home_position = NULL;
+    service_ctx.ptz_node.on_set_preset = NULL;
+    service_ctx.ptz_node.on_set_home_position = NULL;
+    service_ctx.ptz_node.on_remove_preset = NULL;
+    service_ctx.ptz_node.on_jump_to_abs = NULL;
+    service_ctx.ptz_node.on_jump_to_rel = NULL;
 
     while(fgets(line, MAX_LEN, fF)) {
         char *first = line;
@@ -292,6 +345,20 @@ int process_conf_file(char *file)
             service_ctx.ptz_node.remove_preset = NULL;
             service_ctx.ptz_node.jump_to_abs = NULL;
             service_ctx.ptz_node.jump_to_rel = NULL;
+            service_ctx.ptz_node.on_move_left = NULL;
+            service_ctx.ptz_node.on_move_right = NULL;
+            service_ctx.ptz_node.on_move_up = NULL;
+            service_ctx.ptz_node.on_move_down = NULL;
+            service_ctx.ptz_node.on_move_in = NULL;
+            service_ctx.ptz_node.on_move_out = NULL;
+            service_ctx.ptz_node.on_move_stop = NULL;
+            service_ctx.ptz_node.on_move_preset = NULL;
+            service_ctx.ptz_node.on_goto_home_position = NULL;
+            service_ctx.ptz_node.on_set_preset = NULL;
+            service_ctx.ptz_node.on_set_home_position = NULL;
+            service_ctx.ptz_node.on_remove_preset = NULL;
+            service_ctx.ptz_node.on_jump_to_abs = NULL;
+            service_ctx.ptz_node.on_jump_to_rel = NULL;
         } else if (strcasecmp(param, "min_step_x") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
                 if (value[0] == '\0') {
@@ -418,73 +485,143 @@ int process_conf_file(char *file)
             }
         } else if (strcasecmp(param, "move_left") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_left = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_left, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_left = (int (*)(double)) sym;
+                } else {
+                    service_ctx.ptz_node.move_left = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_left, value);
+                }
             }
         } else if (strcasecmp(param, "move_right") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_right = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_right, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_right = (int (*)(double)) sym;
+                } else {
+                    service_ctx.ptz_node.move_right = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_right, value);
+                }
             }
         } else if (strcasecmp(param, "move_up") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_up = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_up, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_up = (int (*)(double)) sym;
+                } else {
+                    service_ctx.ptz_node.move_up = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_up, value);
+                }
             }
         } else if (strcasecmp(param, "move_down") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_down = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_down, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_down = (int (*)(double)) sym;
+                } else {
+                    service_ctx.ptz_node.move_down = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_down, value);
+                }
             }
         } else if (strcasecmp(param, "move_in") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_in = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_in, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_in = (int (*)(double)) sym;
+                } else {
+                    service_ctx.ptz_node.move_in = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_in, value);
+                }
             }
         } else if (strcasecmp(param, "move_out") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_out = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_out, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_out = (int (*)(double)) sym;
+                } else {
+                    service_ctx.ptz_node.move_out = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_out, value);
+                }
             }
         } else if (strcasecmp(param, "move_stop") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_stop = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_stop, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_stop = (int (*)(const char *)) sym;
+                } else {
+                    service_ctx.ptz_node.move_stop = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_stop, value);
+                }
             }
         } else if (strcasecmp(param, "move_preset") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.move_preset = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.move_preset, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_move_preset = (int (*)(int)) sym;
+                } else {
+                    service_ctx.ptz_node.move_preset = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.move_preset, value);
+                }
             }
         } else if (strcasecmp(param, "goto_home_position") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.goto_home_position = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.goto_home_position, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_goto_home_position = (int (*)(void)) sym;
+                } else {
+                    service_ctx.ptz_node.goto_home_position = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.goto_home_position, value);
+                }
             }
         } else if (strcasecmp(param, "set_preset") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.set_preset = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.set_preset, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_set_preset = (int (*)(int, const char *)) sym;
+                } else {
+                    service_ctx.ptz_node.set_preset = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.set_preset, value);
+                }
             }
         } else if (strcasecmp(param, "set_home_position") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.set_home_position = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.set_home_position, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_set_home_position = (int (*)(void)) sym;
+                } else {
+                    service_ctx.ptz_node.set_home_position = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.set_home_position, value);
+                }
             }
         } else if (strcasecmp(param, "remove_preset") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.remove_preset = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.remove_preset, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_remove_preset = (int (*)(int)) sym;
+                } else {
+                    service_ctx.ptz_node.remove_preset = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.remove_preset, value);
+                }
             }
         } else if (strcasecmp(param, "jump_to_abs") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.jump_to_abs = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.jump_to_abs, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_jump_to_abs = (int (*)(double, double, double)) sym;
+                } else {
+                    service_ctx.ptz_node.jump_to_abs = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.jump_to_abs, value);
+                }
             }
         } else if (strcasecmp(param, "jump_to_rel") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
-                service_ctx.ptz_node.jump_to_rel = (char *) malloc(strlen(value) + 1);
-                strcpy(service_ctx.ptz_node.jump_to_rel, value);
+                void *sym = load_ptz_hook(value);
+                if (sym != NULL) {
+                    service_ctx.ptz_node.on_jump_to_rel = (int (*)(double, double, double)) sym;
+                } else {
+                    service_ctx.ptz_node.jump_to_rel = (char *) malloc(strlen(value) + 1);
+                    strcpy(service_ctx.ptz_node.jump_to_rel, value);
+                }
             }
         } else if (strcasecmp(param, "get_presets") == 0) {
             if (service_ctx.ptz_node.enable == 1) {
@@ -882,20 +1019,160 @@ int process_json_conf_file(char *file)
         get_double_from_json(&(service_ctx.ptz_node.max_step_z), value, "max_step_z");
         get_string_from_json(&(service_ctx.ptz_node.get_position), value, "get_position");
         get_string_from_json(&(service_ctx.ptz_node.is_moving), value, "is_moving");
-        get_string_from_json(&(service_ctx.ptz_node.move_left), value, "move_left");
-        get_string_from_json(&(service_ctx.ptz_node.move_right), value, "move_right");
-        get_string_from_json(&(service_ctx.ptz_node.move_up), value, "move_up");
-        get_string_from_json(&(service_ctx.ptz_node.move_down), value, "move_down");
-        get_string_from_json(&(service_ctx.ptz_node.move_in), value, "move_in");
-        get_string_from_json(&(service_ctx.ptz_node.move_out), value, "move_out");
-        get_string_from_json(&(service_ctx.ptz_node.move_stop), value, "move_stop");
-        get_string_from_json(&(service_ctx.ptz_node.move_preset), value, "move_preset");
-        get_string_from_json(&(service_ctx.ptz_node.goto_home_position), value, "goto_home_position");
-        get_string_from_json(&(service_ctx.ptz_node.set_preset), value, "set_preset");
-        get_string_from_json(&(service_ctx.ptz_node.set_home_position), value, "set_home_position");
-        get_string_from_json(&(service_ctx.ptz_node.remove_preset), value, "remove_preset");
-        get_string_from_json(&(service_ctx.ptz_node.jump_to_abs), value, "jump_to_abs");
-        get_string_from_json(&(service_ctx.ptz_node.jump_to_rel), value, "jump_to_rel");
+        char *tmp = NULL;
+        get_string_from_json(&tmp, value, "move_left");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_left = (int (*)(double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_left = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_right");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_right = (int (*)(double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_right = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_up");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_up = (int (*)(double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_up = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_down");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_down = (int (*)(double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_down = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_in");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_in = (int (*)(double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_in = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_out");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_out = (int (*)(double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_out = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_stop");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_stop = (int (*)(const char *)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_stop = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "move_preset");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_move_preset = (int (*)(int)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.move_preset = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "goto_home_position");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_goto_home_position = (int (*)(void)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.goto_home_position = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "set_preset");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_set_preset = (int (*)(int, const char *)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.set_preset = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "set_home_position");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_set_home_position = (int (*)(void)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.set_home_position = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "remove_preset");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_remove_preset = (int (*)(int)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.remove_preset = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "jump_to_abs");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_jump_to_abs = (int (*)(double, double, double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.jump_to_abs = tmp;
+            }
+        }
+        tmp = NULL;
+        get_string_from_json(&tmp, value, "jump_to_rel");
+        if (tmp != NULL) {
+            void *sym = load_ptz_hook(tmp);
+            if (sym != NULL) {
+                service_ctx.ptz_node.on_jump_to_rel = (int (*)(double, double, double)) sym;
+                free(tmp);
+            } else {
+                service_ctx.ptz_node.jump_to_rel = tmp;
+            }
+        }
         get_string_from_json(&(service_ctx.ptz_node.get_presets), value, "get_presets");
 
         // Print debug
