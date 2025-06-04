@@ -30,6 +30,13 @@
 
 extern service_context_t service_ctx;
 
+static device_get_capabilities_hook_t get_capabilities_hook = NULL;
+
+void register_device_get_capabilities_hook(device_get_capabilities_hook_t hook)
+{
+    get_capabilities_hook = hook;
+}
+
 int device_get_services()
 {
     int ret = 0;
@@ -490,6 +497,13 @@ int device_get_capabilities()
         sprintf(audio_outputs, "%d", 1);
     } else {
         sprintf(audio_outputs, "%d", 0);
+    }
+
+    if (get_capabilities_hook) {
+        int hook_ret = get_capabilities_hook(icategory, &service_ctx);
+        if (hook_ret != 0) {
+            return hook_ret;
+        }
     }
 
     if (icategory == 1) {
